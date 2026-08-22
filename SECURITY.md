@@ -9,7 +9,7 @@ internal tool.
 **Do not open a public issue.**
 
 Use GitHub's private vulnerability reporting (Security → Report a
-vulnerability), or email **`SECURITY_CONTACT_TO_BE_SET`**.
+vulnerability), or email **<xampydev@gmail.com>**.
 
 Include the browser and version, the deployment shape (behind the bundled nginx,
 or `ng serve` against a remote API), and what you were able to reach that you
