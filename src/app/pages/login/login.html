@@ -1,0 +1,45 @@
+<div class="login">
+  <form class="card" (ngSubmit)="submit()">
+    <h1>nit console</h1>
+    <p class="lead">Sign in with an operator token.</p>
+
+    <label for="server">Server</label>
+    <input
+      id="server"
+      name="server"
+      type="text"
+      placeholder="leave empty to use this origin"
+      autocomplete="off"
+      [ngModel]="server()"
+      (ngModelChange)="server.set($event)"
+    />
+
+    <label for="token">Token</label>
+    <input
+      id="token"
+      name="token"
+      type="password"
+      placeholder="nit_…"
+      autocomplete="off"
+      [ngModel]="token()"
+      (ngModelChange)="token.set($event)"
+    />
+
+    <button type="submit" [disabled]="busy()">
+      {{ busy() ? 'Verifying…' : 'Sign in' }}
+    </button>
+
+    @if (error(); as failure) {
+      <p class="error">
+        <strong>{{ failure.code }}</strong>
+        {{ failure.message }}
+      </p>
+    }
+
+    <p class="hint">
+      Issue a token on the server with
+      <code>nitctl token create -user &lt;you&gt;</code>. Reading the console needs
+      membership of one of the server's <code>NIT_ADMIN_GROUPS</code>.
+    </p>
+  </form>
+</div>

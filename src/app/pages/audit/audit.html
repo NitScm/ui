@@ -1,0 +1,111 @@
+<header class="page-head">
+  <h1>Audit</h1>
+  <button class="ghost" type="button" (click)="load()">Refresh</button>
+</header>
+
+<p class="lead">
+  Who did what, when, and under which rule. Records are append-only: the database
+  refuses updates and deletes.
+</p>
+
+<form class="filters" (ngSubmit)="load()">
+  <label>
+    User
+    <input name="user" type="text" placeholder="alice"
+           [ngModel]="user()" (ngModelChange)="user.set($event)" />
+  </label>
+
+  <label>
+    Repository
+    <input name="repository" type="text" placeholder="backend-api"
+           [ngModel]="repository()" (ngModelChange)="repository.set($event)" />
+  </label>
+
+  <label>
+    Request
+    <input name="requestId" type="text" placeholder="request id"
+           [ngModel]="requestId()" (ngModelChange)="requestId.set($event)" />
+  </label>
+
+  <label>
+    Window
+    <select name="hours" [ngModel]="hours()" (ngModelChange)="hours.set($event); load()">
+      @for (window of windows; track window.hours) {
+        <option [value]="window.hours">{{ window.label }}</option>
+      }
+    </select>
+  </label>
+
+  <label class="check">
+    <input type="checkbox" name="deniedOnly"
+           [ngModel]="deniedOnly()" (ngModelChange)="deniedOnly.set($event); load()" />
+    Denials only
+  </label>
+
+  <button type="submit">Apply</button>
+  <button class="ghost" type="button" (click)="reset()">Clear</button>
+</form>
+
+@if (error(); as failure) {
+  <p class="error"><strong>{{ failure.code }}</strong> {{ failure.message }}</p>
+} @else if (loading()) {
+  <p class="muted">Loading…</p>
+} @else if (records().length === 0) {
+  <p class="muted">No records match these filters.</p>
+} @else {
+  <table>
+    <thead>
+      <tr>
+        <th>When</th>
+        <th>Actor</th>
+        <th>Action</th>
+        <th>Repository</th>
+        <th>Path</th>
+        <th>Effect</th>
+        <th>Rule</th>
+        <th>Policy</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (record of records(); track record.id) {
+        <tr [class.denied]="record.effect === 'deny'">
+          <td [title]="record.occurred_at">{{ record.occurred_at | relative }}</td>
+          <td>{{ record.actor }}</td>
+          <td class="mono">{{ record.action }}</td>
+          <td>
+            {{ record.repository }}
+            @if (record.branch) {
+              <span class="muted">@{{ record.branch }}</span>
+            }
+          </td>
+          <td class="mono">{{ record.path }}</td>
+          <td>
+            @if (record.effect) {
+              <span class="effect" [class]="record.effect">{{ record.effect }}</span>
+            }
+          </td>
+          <td class="mono">
+            {{ record.rule_id }}
+            @if (record.guard) {
+              <span class="guard">{{ record.guard }}</span>
+            }
+          </td>
+          <td class="mono muted">
+            <!-- An investigation walks from a record to the task it belongs to,
+                 so the record has to be a way in. -->
+            @if (record.task_id) {
+              <a [routerLink]="['/tasks', record.task_id]">task</a>
+            }
+            {{ record.policy_version }}
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+
+  @if (records().length >= 500) {
+    <p class="muted">
+      Showing the first 500 records. Narrow the window or the filters to see more.
+    </p>
+  }
+}

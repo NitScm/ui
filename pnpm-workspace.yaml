@@ -1,0 +1,23 @@
+# pnpm blocks dependency build scripts by default, which is the right default:
+# a postinstall script runs arbitrary code from a transitive dependency at
+# install time, on every developer machine and every CI run.
+#
+# These four are pulled in by @angular/build and each compiles or fetches a
+# native binary:
+#
+#   esbuild            the bundler itself — nothing builds without it
+#   lmdb               Angular's persistent build cache
+#   msgpackr-extract   lmdb's serializer
+#   @parcel/watcher    file watching behind "ng serve"
+#
+# lmdb, msgpackr-extract and @parcel/watcher fall back to slower JavaScript
+# implementations when unbuilt, so blocking them costs speed rather than
+# correctness. esbuild does not.
+#
+# Adding an entry here is a decision to run someone else's code at install time.
+# Look at what the script does first.
+allowBuilds:
+  "@parcel/watcher": true
+  esbuild: true
+  lmdb: true
+  msgpackr-extract: true

@@ -1,0 +1,84 @@
+<header class="page-head">
+  <h1>Policy</h1>
+</header>
+
+<p class="lead">
+  The bundle in force, read-only. Rules are authored in files and reviewed like
+  code; this console shows what is running so nobody has to read YAML on a
+  server. Evaluation is order-independent — deny wins, and anything unmatched is
+  denied.
+</p>
+
+@if (error(); as failure) {
+  <p class="error"><strong>{{ failure.code }}</strong> {{ failure.message }}</p>
+} @else if (loading()) {
+  <p class="muted">Loading…</p>
+} @else if (bundle(); as bundle) {
+  <p class="version">
+    <span class="label">Version</span>
+    <code>{{ bundle.version }}</code>
+  </p>
+
+  @for (repo of bundle.repositories; track repo.id) {
+    <section class="repo">
+      <h2>{{ repo.id }}</h2>
+
+      <dl class="repo-meta">
+        <div><dt>Remote</dt><dd><code>{{ repo.remote }}</code></dd></div>
+        <div><dt>Forge</dt><dd>{{ repo.forge }}</dd></div>
+        <div><dt>Default branch</dt><dd><code>{{ repo.default_branch }}</code></dd></div>
+      </dl>
+
+      @if (repo.rules.length === 0) {
+        <p class="muted">No rules: everything is denied by default.</p>
+      } @else {
+        <table>
+          <thead>
+            <tr>
+              <th>Effect</th>
+              <th>Rule</th>
+              <th>Subject</th>
+              <th>Paths</th>
+              <th>Refs</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (rule of repo.rules; track rule.id) {
+              <tr>
+                <td>
+                  <span class="effect" [class]="rule.effect">{{ rule.effect }}</span>
+                </td>
+                <td>
+                  <code>{{ rule.id }}</code>
+                  @if (rule.description) {
+                    <p class="muted">{{ rule.description }}</p>
+                  }
+                </td>
+                <td>
+                  <code>{{ rule.subject }}</code>
+                  @if (rule.except?.length) {
+                    <!-- An exemption cannot be an allow rule: deny always wins,
+                         so it would be swallowed. -->
+                    <p class="except">except {{ rule.except?.join(', ') }}</p>
+                  }
+                </td>
+                <td>
+                  @for (path of rule.paths; track path) {
+                    <code class="chip">{{ path }}</code>
+                  }
+                </td>
+                <td>
+                  @for (ref of rule.refs; track ref) {
+                    <code class="chip">{{ ref }}</code>
+                  }
+                </td>
+                <td class="actions">{{ rule.actions.join(', ') }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </section>
+  }
+}

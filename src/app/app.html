@@ -1,0 +1,33 @@
+@if (session.authenticated()) {
+  <div class="shell">
+    <aside>
+      <div class="brand">
+        <span class="mark">nit</span>
+        <span class="sub">console</span>
+      </div>
+
+      <nav>
+        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+          Overview
+        </a>
+        <a routerLink="/tasks" routerLinkActive="active">Tasks</a>
+        <a routerLink="/audit" routerLinkActive="active">Audit</a>
+        <a routerLink="/policy" routerLinkActive="active">Policy</a>
+      </nav>
+
+      <div class="who">
+        @if (session.identity(); as identity) {
+          <span class="user">{{ identity.user }}</span>
+          <span class="groups">{{ identity.groups.join(', ') }}</span>
+        }
+        <button class="ghost small" type="button" (click)="signOut()">Sign out</button>
+      </div>
+    </aside>
+
+    <main>
+      <router-outlet />
+    </main>
+  </div>
+} @else {
+  <router-outlet />
+}

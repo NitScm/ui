@@ -1,0 +1,87 @@
+<header class="page-head">
+  <h1>Task</h1>
+  <a class="ghost" routerLink="/tasks">Back to tasks</a>
+</header>
+
+@if (error(); as failure) {
+  <p class="error"><strong>{{ failure.code }}</strong> {{ failure.message }}</p>
+} @else if (loading()) {
+  <p class="muted">Loading…</p>
+} @else if (task(); as task) {
+  <section class="summary">
+    <div><span class="label">State</span><nit-state-badge [state]="task.state" /></div>
+    <div><span class="label">Kind</span><span>{{ task.kind }}</span></div>
+    <div><span class="label">User</span><span>{{ task.user }}</span></div>
+    <div><span class="label">Repository</span><span>{{ task.repository }}</span></div>
+    <div><span class="label">Branch</span><code>{{ task.branch }}</code></div>
+    <div><span class="label">Duration</span><span>{{ task.duration_ms | duration }}</span></div>
+    <div><span class="label">Attempts</span><span>{{ task.attempts }}</span></div>
+    @if (task.lease_holder) {
+      <div><span class="label">Worker</span><code>{{ task.lease_holder }}</code></div>
+    }
+    <div><span class="label">Id</span><code>{{ task.id }}</code></div>
+  </section>
+
+  @if (task.error; as failure) {
+    <section class="failure">
+      <h2>Why it failed</h2>
+      <p><strong>{{ failure.code }}</strong> {{ failure.message }}</p>
+
+      @if (failure.denials?.length) {
+        <ul>
+          @for (denial of failure.denials; track denial.path + denial.action) {
+            <li>
+              <code>{{ denial.path }}</code> ({{ denial.action }})
+              @if (denial.rule_id) {
+                — refused by <code>{{ denial.rule_id }}</code>
+              }
+              @if (denial.description) {
+                <p class="muted">{{ denial.description }}</p>
+              }
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  }
+
+  <section>
+    <h2>What the worker was told to do</h2>
+    <pre>{{ payload() }}</pre>
+  </section>
+
+  @if (result()) {
+    <section>
+      <h2>What it reported</h2>
+      <pre>{{ result() }}</pre>
+    </section>
+  }
+
+  @if (audit().length) {
+    <section>
+      <h2>Audit trail</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>When</th>
+            <th>Action</th>
+            <th>Path</th>
+            <th>Effect</th>
+            <th>Rule</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (record of audit(); track record.id) {
+            <tr>
+              <td>{{ record.occurred_at }}</td>
+              <td>{{ record.action }}</td>
+              <td class="mono">{{ record.path }}</td>
+              <td [class.deny]="record.effect === 'deny'">{{ record.effect }}</td>
+              <td class="mono">{{ record.rule_id }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </section>
+  }
+}

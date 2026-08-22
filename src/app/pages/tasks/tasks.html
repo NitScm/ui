@@ -1,0 +1,88 @@
+<header class="page-head">
+  <h1>Tasks</h1>
+  <button class="ghost" type="button" (click)="load()">Refresh</button>
+</header>
+
+<form class="filters" (ngSubmit)="load()">
+  <label>
+    State
+    <select name="state" [ngModel]="state()" (ngModelChange)="state.set($event); load()">
+      <option value="">any</option>
+      <option value="queued">queued</option>
+      <option value="running">running</option>
+      <option value="succeeded">succeeded</option>
+      <option value="failed">failed</option>
+      <option value="cancelled">cancelled</option>
+    </select>
+  </label>
+
+  <label>
+    Kind
+    <select name="kind" [ngModel]="kind()" (ngModelChange)="kind.set($event); load()">
+      <option value="">any</option>
+      <option value="push">push</option>
+      <option value="pull">pull</option>
+    </select>
+  </label>
+
+  <label>
+    Repository
+    <input
+      name="repository"
+      type="text"
+      placeholder="backend-api"
+      [ngModel]="repository()"
+      (ngModelChange)="repository.set($event)"
+    />
+  </label>
+
+  <button type="submit">Apply</button>
+  <button class="ghost" type="button" (click)="reset()">Clear</button>
+</form>
+
+@if (error(); as failure) {
+  <p class="error"><strong>{{ failure.code }}</strong> {{ failure.message }}</p>
+} @else if (loading()) {
+  <p class="muted">Loading…</p>
+} @else if (tasks().length === 0) {
+  <p class="muted">No tasks match these filters.</p>
+} @else {
+  <table>
+    <thead>
+      <tr>
+        <th>State</th>
+        <th>Kind</th>
+        <th>User</th>
+        <th>Repository</th>
+        <th>Branch</th>
+        <th>Duration</th>
+        <th>Try</th>
+        <th>Created</th>
+        <th>Note</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (task of tasks(); track task.id) {
+        <tr [routerLink]="['/tasks', task.id]">
+          <td><nit-state-badge [state]="task.state" /></td>
+          <td>{{ task.kind }}</td>
+          <td>{{ task.user }}</td>
+          <td>{{ task.repository }}</td>
+          <td class="mono">{{ task.branch }}</td>
+          <td class="num">{{ task.duration_ms | duration }}</td>
+          <td class="num">{{ task.attempts }}</td>
+          <td [title]="task.created_at">{{ task.created_at | relative }}</td>
+          <td class="note">
+            @if (task.error) {
+              <span class="fail">{{ task.error.code }}</span>
+            } @else if (task.queue_position) {
+              {{ task.queue_position }} ahead
+            } @else if (task.lease_holder) {
+              {{ task.lease_holder }}
+            }
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}

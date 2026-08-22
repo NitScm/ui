@@ -1,0 +1,64 @@
+.login {
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  padding: 2rem 1rem;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: min(26rem, 100%);
+  padding: 2rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  letter-spacing: -0.02em;
+}
+
+.lead {
+  margin: 0 0 1rem;
+  color: var(--muted);
+}
+
+label {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+button {
+  margin-top: 1.25rem;
+}
+
+.error {
+  margin: 1rem 0 0;
+  padding: 0.75rem;
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
+  border-radius: 0.5rem;
+  color: var(--danger);
+  font-size: 0.9rem;
+
+  strong {
+    display: block;
+    font-family: var(--mono);
+    font-size: 0.8rem;
+  }
+}
+
+.hint {
+  margin: 1.5rem 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.6;
+}

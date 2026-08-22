@@ -1,0 +1,38 @@
+.lead {
+  margin: -0.5rem 0 1.5rem;
+  color: var(--muted);
+  max-width: 60ch;
+}
+
+.effect {
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+
+  &.deny {
+    color: var(--danger);
+    background: color-mix(in srgb, var(--danger) 14%, transparent);
+  }
+
+  &.allow {
+    color: var(--muted);
+    background: color-mix(in srgb, var(--muted) 12%, transparent);
+  }
+}
+
+// A denied row is the one an investigation is looking for; the tint is enough
+// to find it while scrolling, without turning the table into a warning sign.
+tr.denied td:first-child {
+  box-shadow: inset 2px 0 0 var(--danger);
+}
+
+.guard {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.05rem 0.35rem;
+  border: 1px solid var(--border);
+  border-radius: 0.3rem;
+  font-size: 0.7rem;
+  color: var(--warn);
+}

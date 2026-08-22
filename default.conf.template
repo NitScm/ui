@@ -1,0 +1,77 @@
+# Serving the nit console.
+#
+# The console and the API are served from **one origin**: nginx proxies /v1,
+# /healthz and /openapi.yaml to nitd. That is what lets the sign-in screen's
+# Server field be left empty, and it means no CORS configuration is needed at
+# all — the browser never makes a cross-origin request.
+#
+# ${NIT_API_URL} is substituted at container start by the nginx image's
+# template mechanism. Only variables present in the environment are replaced,
+# so nginx's own $uri and $host survive untouched.
+
+server {
+    listen 80;
+    server_name _;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # An operations console has no business being indexed or embedded.
+    add_header X-Frame-Options DENY always;
+    add_header X-Content-Type-Options nosniff always;
+    add_header Referrer-Policy same-origin always;
+
+    # The console loads nothing from anywhere else, and must not be able to:
+    # the operator's token lives in localStorage, so any third-party script on
+    # this origin could read it.
+    add_header Content-Security-Policy
+        "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' http: https:; img-src 'self' data:; frame-ancestors 'none'" always;
+
+    # Fingerprinted bundles never change under the same name.
+    location ~* \.(js|css|woff2?|svg|png|ico)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        try_files $uri =404;
+    }
+
+    # --- the API, same origin ------------------------------------------------
+
+    location /v1/ {
+        proxy_pass ${NIT_API_URL};
+        proxy_http_version 1.1;
+
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # /v1/tasks/{id}/events is a long poll held open for as long as the
+        # server's NIT_EVENT_MAX_WAIT. A default 60s read timeout would cut it
+        # off mid-wait, and buffering would hold the answer back after it
+        # arrived.
+        proxy_read_timeout 300s;
+        proxy_buffering off;
+
+        # Patches are uploaded through here, and they can be large.
+        client_max_body_size 200m;
+    }
+
+    location = /healthz {
+        proxy_pass ${NIT_API_URL};
+        proxy_set_header Host $host;
+    }
+
+    location = /openapi.yaml {
+        proxy_pass ${NIT_API_URL};
+        proxy_set_header Host $host;
+    }
+
+    # --- the application ------------------------------------------------------
+
+    # A single-page application: every unknown path is a client-side route, not
+    # a missing file.
+    location / {
+        try_files $uri $uri/ /index.html;
+        add_header Cache-Control "no-cache";
+    }
+}

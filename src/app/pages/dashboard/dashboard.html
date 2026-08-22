@@ -1,0 +1,96 @@
+<header class="page-head">
+  <h1>Overview</h1>
+  <button class="ghost" type="button" (click)="load()">Refresh</button>
+</header>
+
+@if (error(); as failure) {
+  <p class="error"><strong>{{ failure.code }}</strong> {{ failure.message }}</p>
+} @else if (loading()) {
+  <p class="muted">Loading…</p>
+} @else if (stats(); as stats) {
+  <section class="tiles">
+    <!-- Queue depth and busy branches first: they are the only numbers that
+         mean something is wrong right now. -->
+    <article class="tile" [class.attention]="stats.queue_depth > 0">
+      <span class="value">{{ stats.queue_depth }}</span>
+      <span class="label">Queued</span>
+    </article>
+
+    <article class="tile" [class.attention]="stats.busy_branches > 0">
+      <span class="value">{{ stats.busy_branches }}</span>
+      <span class="label">Branches busy</span>
+    </article>
+
+    <article class="tile">
+      <span class="value">{{ count('running') }}</span>
+      <span class="label">Running</span>
+    </article>
+
+    <article class="tile" [class.danger]="count('failed') > 0">
+      <span class="value">{{ count('failed') }}</span>
+      <span class="label">Failed</span>
+    </article>
+
+    <article class="tile">
+      <span class="value">{{ count('succeeded') }}</span>
+      <span class="label">Succeeded</span>
+    </article>
+
+    <article class="tile">
+      <span class="value">{{ stats.recent_denials }}</span>
+      <span class="label">Denials, 24h</span>
+    </article>
+  </section>
+
+  <section class="meta">
+    <div>
+      <span class="label">Policy in force</span>
+      <code>{{ stats.policy_version }}</code>
+    </div>
+    <div>
+      <span class="label">Repositories</span>
+      <code>{{ stats.repositories }}</code>
+    </div>
+  </section>
+
+  <section>
+    <h2>In flight</h2>
+
+    @if (active().length === 0) {
+      <p class="muted">Nothing queued or running.</p>
+    } @else {
+      <table>
+        <thead>
+          <tr>
+            <th>State</th>
+            <th>Kind</th>
+            <th>User</th>
+            <th>Repository</th>
+            <th>Branch</th>
+            <th>Waiting</th>
+            <th>Age</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (task of active(); track task.id) {
+            <tr [routerLink]="['/tasks', task.id]">
+              <td><nit-state-badge [state]="task.state" /></td>
+              <td>{{ task.kind }}</td>
+              <td>{{ task.user }}</td>
+              <td>{{ task.repository }}</td>
+              <td class="mono">{{ task.branch }}</td>
+              <td>
+                @if (task.queue_position) {
+                  {{ task.queue_position }} ahead
+                } @else {
+                  —
+                }
+              </td>
+              <td>{{ task.created_at | relative }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </section>
+}
