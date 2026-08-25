@@ -1,0 +1,60 @@
+# The checks every change has to pass.
+#
+# A console is mostly templates, and a template that does not compile is what
+# this catches. The production configuration is strict on purpose: it fails on a
+# binding to something that does not exist, which is the mistake a console makes
+# most.
+
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      # --frozen-lockfile is the CI form: it fails rather than silently
+      # resolving a different tree when the lockfile and package.json disagree.
+      - run: pnpm install --frozen-lockfile
+
+      - name: Tests
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+        run: pnpm exec ng test --watch=false
+
+      - name: Build
+        run: pnpm exec ng build --configuration production
+
+      # One of this repository's two non-negotiable rules, checked rather than
+      # trusted. The operator's token lives in localStorage, so any third-party
+      # script on this origin could read it.
+      #
+      # Spec files are excluded: what ships is what matters, and a fixture
+      # naming https://nit.example.com goes nowhere.
+      - name: Nothing loads from another origin
+        run: |
+          offenders=$(grep -rnE 'https?://(?!localhost|127\.0\.0\.1)' \
+            --include='*.html' --include='*.ts' src/ -P \
+            | grep -v '\.spec\.ts:' \
+            | grep -vE '(w3\.org|schema\.org|angular\.(io|dev)|^\s*//|\*)' || true)
+
+          if [ -n "$offenders" ]; then
+            echo "a runtime URL to another origin:"
+            echo "$offenders"
+            exit 1
+          fi
+
+          echo "nothing reaches another origin"
