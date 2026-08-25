@@ -1,0 +1,21 @@
+# What must not reach the image.
+#
+# node_modules is the one that bites. `COPY . .` would put the host's tree on
+# top of the one `pnpm install` just built, and pnpm then finds a modules
+# directory that does not match its store — it wants to purge it, cannot ask in
+# a build, and fails with ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY.
+#
+# It is also 273 MB that would be uploaded as build context and then thrown
+# away, on every build.
+node_modules
+dist
+.angular
+.git
+.agents
+
+# Nothing here is a credential today. This is so that nothing here becoming one
+# is a decision somebody has to make deliberately.
+.env
+.env.*
+*.key
+*.pem

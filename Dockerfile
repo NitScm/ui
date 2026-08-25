@@ -13,6 +13,13 @@ WORKDIR /src
 # field, so the image builds with the same one developers use.
 RUN corepack enable
 
+# A container build is CI, and pnpm behaves differently when it thinks it is
+# talking to somebody: without this it asks before removing a stale modules
+# directory, cannot ask, and fails. .dockerignore is what keeps that directory
+# from being stale in the first place; this is what keeps the failure from
+# being a question nobody can answer.
+ENV CI=true
+
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 # --frozen-lockfile is the CI form: it fails rather than silently resolving a
